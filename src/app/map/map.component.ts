@@ -23,6 +23,10 @@ export class MapComponent implements OnInit {
 
   private images: Array<HTMLImageElement> = [];
 
+  private interactors = [{x: 0, y: 0, w: 0, h: 0, callback: () => console.log("default")}];
+
+  private lastmousepos = {x: 0, y: 0}
+
   constructor() { }
 
   ngOnInit() {
@@ -40,7 +44,7 @@ export class MapComponent implements OnInit {
     this.images["ground"].src = "../../assets/ground.png"
 
     
-
+    
     this.canvas.nativeElement.onwheel = (ev: WheelEvent) => this.onmousewheel(ev);
     this.canvas.nativeElement.onmousemove = (ev: MouseEvent) => this.onmousemove(ev);
 
@@ -50,11 +54,14 @@ export class MapComponent implements OnInit {
   }
   
 
-  update() {
+  private update() {
     this.ctx.clearRect(0, 0, this.canvas.nativeElement.width, this.canvas.nativeElement.height);
 
     this.generatebackground();
     //console.log(this.campos)
+    this.interactors = [];
+
+    // draw villages
     for (let i = 0; i < this.testdata.length; i++) {
       const element= this.testdata[i];
       
@@ -65,19 +72,32 @@ export class MapComponent implements OnInit {
       let posy = this.centercanvas.y + (element.y + this.campos.y) * this.campos.z;
 
       //this.ctx.fillRect(posx, posy, this.campos.z, this.campos.z);
+      this.ctx.beginPath();
+      
+      this.ctx.rect(posx, posy, this.campos.z, this.campos.z);
+      //this.ctx.fill()
+
+      if(this.ctx.isPointInPath(this.lastmousepos.x, this.lastmousepos.y))
+      {
+        this.ctx.filter = "brightness(120%)";
+      }
       this.ctx.drawImage(this.images["town"], posx, posy, this.campos.z, this.campos.z);
+
+      this.ctx.filter = "none";
 
       this.ctx.font = `normal ${this.campos.z / 6}px Arial`;
       this.ctx.fillText(element.name, posx + this.campos.z / 10, posy - this.campos.z / 20)
 
-      //console.log(`drawing at x${posx} and y${posy}`)
+      this.interactors.push({x: posx, y: posy, w: this.campos.z, h: this.campos.z, callback: () => console.log(element.name)})
+
+      //console.log(`drawing at x${posx} and y${posy} - mouse at x${this.lastmousepos.x} y${this.lastmousepos.y}`)
       
     }
 
     window.requestAnimationFrame(this.update.bind(this))
   }
 
-  onmousewheel(ev: WheelEvent)
+  private onmousewheel(ev: WheelEvent)
   {
     ev.preventDefault();
 
@@ -89,23 +109,27 @@ export class MapComponent implements OnInit {
 
   }
 
-  onmousemove(ev: MouseEvent) {
+  private onmousemove(ev: MouseEvent) {
     
+    // move map on drag
     if(ev.buttons === 1)
     {
       this.campos.x += ev.movementX / this.campos.z;
       this.campos.y += ev.movementY / this.campos.z;
     }
+
+    this.lastmousepos.x = ev.offsetX;
+    this.lastmousepos.y = ev.offsetY;
   }
 
-  generatebackground() {
+  private generatebackground() {
     let size = 260 * this.campos.z / 20;
 
 
     let pattern = this.ctx.createPattern(this.images["ground"], "repeat");
 
     this.ctx.fillStyle = pattern;
-    this.ctx.fillRect(0, 0, this.centercanvas.x * 2, this.centercanvas.y * 2)
+    this.ctx.fillRect(0, 0, this.centercanvas.x * 2, this.centercanvas.y * 2);
     
     // for (let x = 0; x < this.centercanvas.x * 2 / size; x++) {
     //   for (let y = 0; y < this.centercanvas.y * 2 / size; y++) {
