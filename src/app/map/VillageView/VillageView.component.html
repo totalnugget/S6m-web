@@ -1,0 +1,9 @@
+<div>
+  <div>title: {{villageData.name}}</div>
+
+  
+  <div *ngFor="let item of villageData.units; let i = index" [attr.data-index]="i">
+    {{UnitData[i].name}} : {{item}}
+
+  </div>
+</div>

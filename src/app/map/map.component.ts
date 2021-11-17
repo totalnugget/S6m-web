@@ -1,6 +1,9 @@
 import { ViewChild } from '@angular/core';
 import { ElementRef } from '@angular/core';
 import { Component, OnInit } from '@angular/core';
+import {MatDialog} from '@angular/material/dialog';
+import { VillageService } from './Village.service';
+import { VillageModalComponent } from './villageModal/villageModal.component';
 
 @Component({
   selector: 'app-map',
@@ -14,26 +17,29 @@ export class MapComponent implements OnInit {
 
   private ctx: CanvasRenderingContext2D
 
+  ////private testdata = [{x: 0, y: 0, c: "#ff0000", name: "bob's villa"}, {x: 6, y: 1, c: "#00f", name: "harry's villa"}, {x: 7, y: 1, c: "#00f", name: "derpirino"}];
 
-  private testdata = [{x: 0, y: 0, c: "#ff0000", name: "bob's villa"}, {x: 6, y: 1, c: "#00f", name: "harry's villa"}, {x: 7, y: 1, c: "#00f", name: "derpirino"}];
 
+
+  // position and zoom of the "camera" defines wat to render
   private campos = {x: 0, y: 0, z: 100};
+
 
   private centercanvas = {x: 300, y: 300};
 
   private images: Array<HTMLImageElement> = [];
 
-  private interactors = [{x: 0, y: 0, w: 0, h: 0, callback: () => console.log("default")}];
+  private interactors = [{x: 0, y: 0, w: 0, h: 0, callback: () => console.log("default"), name: "", id: 1}];
 
-  private lastmousepos = {x: 0, y: 0}
+  private lastmousepos = {x: 0, y: 0, buttons: 0}
 
-  constructor() { }
+  constructor(public dialog: MatDialog, private villageService: VillageService) { }
 
   ngOnInit() {
     this.ctx = this.canvas.nativeElement.getContext('2d');
 
-    this.canvas.nativeElement.width = 1000;
-    this.canvas.nativeElement.height = 1000;
+    this.canvas.nativeElement.width = window.innerWidth;
+    this.canvas.nativeElement.height = window.innerHeight - 64;
 
     this.centercanvas.x = this.canvas.nativeElement.width /2;
     this.centercanvas.y = this.canvas.nativeElement.height /2;
@@ -43,43 +49,57 @@ export class MapComponent implements OnInit {
     this.images["ground"] = new Image();
     this.images["ground"].src = "../../assets/ground.png"
 
-    
-    
+
     this.canvas.nativeElement.onwheel = (ev: WheelEvent) => this.onmousewheel(ev);
     this.canvas.nativeElement.onmousemove = (ev: MouseEvent) => this.onmousemove(ev);
+    this.canvas.nativeElement.onclick = (ev: MouseEvent) => this.onmouseclick(ev);
 
-    //setInterval(() => this.update(), 100);
-    //this.update()
+    ////setInterval(() => this.update(), 100);
+    ////this.update()
     window.requestAnimationFrame(this.update.bind(this))
   }
-  
 
   private update() {
+    let villages = this.villageService.GetVillages();
+
+
     this.ctx.clearRect(0, 0, this.canvas.nativeElement.width, this.canvas.nativeElement.height);
 
     this.generatebackground();
-    //console.log(this.campos)
+    ////console.log(this.campos)
     this.interactors = [];
 
     // draw villages
-    for (let i = 0; i < this.testdata.length; i++) {
-      const element= this.testdata[i];
+    for (let i = 0; i < villages.length; i++) {
+      const element= villages[i];
       
-      this.ctx.fillStyle = element.c;
+      // todo: user current user here
+      this.ctx.fillStyle = element.OwnerId == 1 ? '#00f' : '#f00'
 
+      if(this.villageService.SelectedVillage == element.id)
+      {
+        this.ctx.fillStyle = '#0f0';
+      }
 
       let posx = this.centercanvas.x + (element.x + this.campos.x) * this.campos.z;
       let posy = this.centercanvas.y + (element.y + this.campos.y) * this.campos.z;
 
-      //this.ctx.fillRect(posx, posy, this.campos.z, this.campos.z);
+      ////this.ctx.fillRect(posx, posy, this.campos.z, this.campos.z);
       this.ctx.beginPath();
       
       this.ctx.rect(posx, posy, this.campos.z, this.campos.z);
-      //this.ctx.fill()
+      ////this.ctx.fill()
 
       if(this.ctx.isPointInPath(this.lastmousepos.x, this.lastmousepos.y))
       {
         this.ctx.filter = "brightness(120%)";
+
+        if(this.lastmousepos.buttons === 1)
+        {
+          this.lastmousepos.buttons = 0;
+          
+        }
+
       }
       this.ctx.drawImage(this.images["town"], posx, posy, this.campos.z, this.campos.z);
 
@@ -88,9 +108,9 @@ export class MapComponent implements OnInit {
       this.ctx.font = `normal ${this.campos.z / 6}px Arial`;
       this.ctx.fillText(element.name, posx + this.campos.z / 10, posy - this.campos.z / 20)
 
-      this.interactors.push({x: posx, y: posy, w: this.campos.z, h: this.campos.z, callback: () => console.log(element.name)})
+      this.interactors.push({x: posx, y: posy, w: this.campos.z, h: this.campos.z, callback: () => console.log(element.name), name: element.name, id: element.id})
 
-      //console.log(`drawing at x${posx} and y${posy} - mouse at x${this.lastmousepos.x} y${this.lastmousepos.y}`)
+      ////console.log(`drawing at x${posx} and y${posy} - mouse at x${this.lastmousepos.x} y${this.lastmousepos.y}`)
       
     }
 
@@ -120,6 +140,25 @@ export class MapComponent implements OnInit {
 
     this.lastmousepos.x = ev.offsetX;
     this.lastmousepos.y = ev.offsetY;
+    this.lastmousepos.buttons = ev.buttons;
+
+    
+  }
+
+  private onmouseclick(ev: MouseEvent) 
+  {
+    //check hitboxes
+    for (let i = 0; i < this.interactors.length; i++) {
+      const element = this.interactors[i];
+
+      if(element.x < ev.offsetX && ev.offsetX < element.x + this.campos.z
+        && element.y < ev.offsetY && ev.offsetY < element.y + this.campos.z)
+      {
+        this.openDialog(element.id)
+        return;
+      }
+      
+    }
   }
 
   private generatebackground() {
@@ -131,13 +170,28 @@ export class MapComponent implements OnInit {
     this.ctx.fillStyle = pattern;
     this.ctx.fillRect(0, 0, this.centercanvas.x * 2, this.centercanvas.y * 2);
     
-    // for (let x = 0; x < this.centercanvas.x * 2 / size; x++) {
-    //   for (let y = 0; y < this.centercanvas.y * 2 / size; y++) {
+    //// for (let x = 0; x < this.centercanvas.x * 2 / size; x++) {
+    ////   for (let y = 0; y < this.centercanvas.y * 2 / size; y++) {
         
-    //     this.ctx.drawImage(this.images["ground"], x * size, y * size, size, size)
-    //   }
-    // }
+    ////     this.ctx.drawImage(this.images["ground"], x * size, y * size, size, size)
+    ////   }
+    //// }
 
+  }
+
+  private openDialog(id :number)
+  {
+    let rect = this.canvas.nativeElement.getBoundingClientRect();
+
+    let x = rect.left + window.scrollX + this.lastmousepos.x
+    let y = rect.top + window.screenY + this.lastmousepos.y
+    
+
+    const dialogRef = this.dialog.open(VillageModalComponent, {data: {id}, position: {top: y + 'px', left:  x + 'px'}, panelClass: 'dialog-no-padding'});
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log(`Dialog result: ${result}`);
+    });
   }
 
 
