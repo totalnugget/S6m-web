@@ -1,13 +1,20 @@
-  import { Injectable } from '@angular/core';
+  import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { interval, Observable, Subject } from 'rxjs';
+import { scan, debounce, map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class VillageService {
 
+  private villageService: string = "http://localhost:7001"
+
   public OwnerId: number = 1;
 
   public SelectedVillage: number = 1;
+
+  private VillageCache: villageDTO[];
 
   public UnitData: UnitDTO[] = [
     new UnitDTO({id: 1, name: 'axe'}),
@@ -23,10 +30,20 @@ export class VillageService {
     new villageDataDTO({id: 4, OwnerId: 2, x: -3, y: 1, name: 'wood', units: [20, 250, 0]})
   ]
 
-  constructor() { }
+  constructor(private http: HttpClient) { }
+
+  private lastRequest: number = 0;
 
   public GetVillages(): readonly villageDTO[]
   {
+    
+    
+    if(this.lastRequest + 10000 < + new Date())
+    {
+      this.lastRequest = + new Date();
+      let result = this.http.get<Array<villageDTO>>(this.villageService + "/api/Village").subscribe(x => console.log(x));
+    }
+
     return this.VillageMockData.map(x => x as villageDTO);
   }
 
@@ -43,11 +60,11 @@ export class VillageService {
 
 export class villageDTO
 {
-  public id: number;
-  public x: number;
-  public y: number;
-  public name: string;
-  public OwnerId: number;
+  public id: number = 0;
+  public x: number = 0;
+  public y: number = 0;
+  public name: string = "";
+  public OwnerId: number = 0;
   
   public constructor(init?:Partial<villageDTO>) {
     Object.assign(this, init);
@@ -57,7 +74,7 @@ export class villageDTO
 export class villageDataDTO extends villageDTO
 {
 
-  public units: number[];
+  public units: number[] = [];
   
   public constructor(init?:Partial<villageDataDTO>) {
     super(init);
@@ -67,9 +84,9 @@ export class villageDataDTO extends villageDTO
 
 export class UnitDTO
 {
-  public id: number;
-  public name: string;
-  public imageUrl: string;
+  public id: number = 0;
+  public name: string = "";
+  public imageUrl: string = "";
 
   // TODO: add stats here
 

@@ -1,3 +1,4 @@
+import { HttpClient } from '@angular/common/http';
 import { ViewChild } from '@angular/core';
 import { ElementRef } from '@angular/core';
 import { Component, OnInit } from '@angular/core';
@@ -13,7 +14,7 @@ import { VillageModalComponent } from './villageModal/villageModal.component';
 export class MapComponent implements OnInit {
 
   @ViewChild('canvas', { static: true }) 
-  canvas: ElementRef<HTMLCanvasElement>;
+  private canvas: ElementRef<HTMLCanvasElement> | undefined;
 
   private ctx: CanvasRenderingContext2D
 
@@ -33,10 +34,18 @@ export class MapComponent implements OnInit {
 
   private lastmousepos = {x: 0, y: 0, buttons: 0}
 
-  constructor(public dialog: MatDialog, private villageService: VillageService) { }
+  constructor(public dialog: MatDialog, private villageService: VillageService) { 
+    if(this.canvas != null) this.ctx = this.canvas.nativeElement.getContext('2d'); 
+
+    
+  }
 
   ngOnInit() {
+
+
     this.ctx = this.canvas.nativeElement.getContext('2d');
+
+    console.log(this.ctx)
 
     this.canvas.nativeElement.width = window.innerWidth;
     this.canvas.nativeElement.height = window.innerHeight - 64;

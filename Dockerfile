@@ -1,5 +1,5 @@
 ### STAGE 1: Build ###
-FROM node:12.7-alpine AS base
+FROM node:16.13 AS base
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install
@@ -10,7 +10,7 @@ RUN npm run build
 
 FROM base AS dev
 WORKDIR /app
-ENTRYPOINT [ "npm", "run","start", "--", "--host", "0.0.0.0" ]
+ENTRYPOINT [ "npm", "run","start", "--", "--host", "0.0.0.0", "--poll" ]
 
 ### STAGE 2: Run ### 
 FROM nginx:1.17.1-alpine AS final

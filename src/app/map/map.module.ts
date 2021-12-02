@@ -6,11 +6,13 @@ import { VillageModalComponent } from './villageModal/villageModal.component';
 import { VillageViewComponent } from './VillageView/VillageView.component';
 import { VillageService } from './Village.service';
 import { VillageCommandComponent } from './VillageCommand/VillageCommand.component';
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
   imports: [
     CommonModule,
-    MaterialModule
+    MaterialModule,
+    HttpClientModule
   ],
   declarations: [MapComponent, VillageModalComponent, VillageViewComponent, VillageCommandComponent],
   entryComponents: [
