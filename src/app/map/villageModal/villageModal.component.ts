@@ -1,6 +1,7 @@
 import { ComponentType } from '@angular/cdk/portal';
 import { Component, Inject, OnInit, TemplateRef } from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { AuthService } from 'src/app/auth/auth.service';
 import { villageDataDTO, VillageService } from '../Village.service';
 import { VillageCommandComponent } from '../VillageCommand/VillageCommand.component';
 import { VillageViewComponent } from '../VillageView/VillageView.component';
@@ -13,11 +14,15 @@ import { VillageViewComponent } from '../VillageView/VillageView.component';
 export class VillageModalComponent implements OnInit {
 
   public CurrentVillage: villageDataDTO;
+  public id: string;
 
-  constructor(@Inject(MAT_DIALOG_DATA) public data: {id: number}, private dialogRef: MatDialogRef<VillageModalComponent>, public dialog: MatDialog, public vilageService: VillageService) { }
+  constructor(@Inject(MAT_DIALOG_DATA) public data: {id: number}, private dialogRef: MatDialogRef<VillageModalComponent>, public dialog: MatDialog, public vilageService: VillageService, public authService: AuthService) { }
 
-  ngOnInit() {
-    this.CurrentVillage = this.vilageService.GetVillageData(this.data.id);
+  async ngOnInit() {
+    this.CurrentVillage = await this.vilageService.GetVillageData(this.data.id);
+    this.id = this.authService.getSubId();
+    console.log(this.CurrentVillage);
+    console.log(this.CurrentVillage.ownerId);
   }
 
   onSelect() {

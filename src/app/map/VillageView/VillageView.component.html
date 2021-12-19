@@ -1,9 +1,9 @@
-<div>
+<div *ngIf="villageData">
   <div>title: {{villageData.name}}</div>
 
   
-  <div *ngFor="let item of villageData.units; let i = index" [attr.data-index]="i">
-    {{UnitData[i].name}} : {{item}}
+  <div *ngFor="let item of villageData.unitCount; let i = index" [attr.data-index]="i">
+    {{UnitData[i].name}} : {{item.amount}}
 
   </div>
 </div>

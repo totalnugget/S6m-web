@@ -3,6 +3,7 @@ import { ViewChild } from '@angular/core';
 import { ElementRef } from '@angular/core';
 import { Component, OnInit } from '@angular/core';
 import {MatDialog} from '@angular/material/dialog';
+import { Command, CommandService } from './Command.service';
 import { VillageService } from './Village.service';
 import { VillageModalComponent } from './villageModal/villageModal.component';
 
@@ -20,8 +21,6 @@ export class MapComponent implements OnInit {
 
   ////private testdata = [{x: 0, y: 0, c: "#ff0000", name: "bob's villa"}, {x: 6, y: 1, c: "#00f", name: "harry's villa"}, {x: 7, y: 1, c: "#00f", name: "derpirino"}];
 
-
-
   // position and zoom of the "camera" defines wat to render
   private campos = {x: 0, y: 0, z: 100};
 
@@ -34,18 +33,16 @@ export class MapComponent implements OnInit {
 
   private lastmousepos = {x: 0, y: 0, buttons: 0}
 
-  constructor(public dialog: MatDialog, private villageService: VillageService) { 
+  constructor(public dialog: MatDialog, private villageService: VillageService, private commandService: CommandService) { 
     if(this.canvas != null) this.ctx = this.canvas.nativeElement.getContext('2d'); 
 
-    
   }
 
   ngOnInit() {
 
-
     this.ctx = this.canvas.nativeElement.getContext('2d');
 
-    console.log(this.ctx)
+    ////console.log(this.ctx)
 
     this.canvas.nativeElement.width = window.innerWidth;
     this.canvas.nativeElement.height = window.innerHeight - 64;
@@ -68,8 +65,8 @@ export class MapComponent implements OnInit {
     window.requestAnimationFrame(this.update.bind(this))
   }
 
-  private update() {
-    let villages = this.villageService.GetVillages();
+  private async update() {
+    let villages = await this.villageService.GetVillages();
 
 
     this.ctx.clearRect(0, 0, this.canvas.nativeElement.width, this.canvas.nativeElement.height);
@@ -83,7 +80,7 @@ export class MapComponent implements OnInit {
       const element= villages[i];
       
       // todo: user current user here
-      this.ctx.fillStyle = element.OwnerId == 1 ? '#00f' : '#f00'
+      this.ctx.fillStyle = element.ownerId == this.villageService.OwnerId ? '#00f' : '#f00'
 
       if(this.villageService.SelectedVillage == element.id)
       {
@@ -123,6 +120,50 @@ export class MapComponent implements OnInit {
       
     }
 
+    // draw commands
+    let commands = await this.commandService.GetCommands()
+    for (let index = 0; index < commands.length; index++) {
+      const element = commands[index];
+      
+      let originVil = villages.find( x => x.id == element.originVillageId);
+
+      let originVilPos = this.ToCanvasPos(originVil.x + 0.5, originVil.y + 0.5);
+
+      let targetVil = villages.find( x => x.id == element.targetVillageId);
+      let targetVilPos = this.ToCanvasPos(targetVil.x + 0.5, targetVil.y + 0.5);
+
+      this.ctx.beginPath();       // Start a new path
+      //this.ctx.setLineDash([20, 40]);
+      this.ctx.moveTo(originVilPos.x, originVilPos.y);    // Move the pen 
+      this.ctx.lineTo(targetVilPos.x, targetVilPos.y);  // Draw a line 
+      this.ctx.stroke();          // Render the path
+
+      let rect = this.ToCanvasPos(targetVil.x + 0.40, targetVil.y + 0.40);
+      this.ctx.fillRect(rect.x, rect.y, this.campos.z * 0.2, this.campos.z * 0.2);
+
+
+      // render army pos
+      let totalduration = element.arrivalTime - element.startTime;
+      let timeWalked = (Date.now() / 1000 | 0) - element.startTime;
+      let timeTillEnd = element.arrivalTime - (Date.now() / 1000 | 0);
+
+      let progress = timeWalked / totalduration;
+      if(progress > 1) progress = 1;
+
+      // army position
+      let armyx = originVil.x + ((targetVil.x - originVil.x) * progress) + 0.5;
+      let armyy = originVil.y + ((targetVil.y - originVil.y) * progress) + 0.5;
+      ////console.log(progress)
+
+      let armypos = this.ToCanvasPos(armyx -0.1, armyy - 0.1);
+
+      this.ctx.fillStyle = '#000';
+      this.ctx.fillRect(armypos.x, armypos.y, this.campos.z * 0.2, this.campos.z * 0.2);
+      this.ctx.fillStyle = '#fff';
+      this.ctx.fillText(timeTillEnd.toString() + "", armypos.x + this.campos.z / 100, armypos.y + this.campos.z / 6)
+
+    }
+
     window.requestAnimationFrame(this.update.bind(this))
   }
 
@@ -150,8 +191,6 @@ export class MapComponent implements OnInit {
     this.lastmousepos.x = ev.offsetX;
     this.lastmousepos.y = ev.offsetY;
     this.lastmousepos.buttons = ev.buttons;
-
-    
   }
 
   private onmouseclick(ev: MouseEvent) 
@@ -166,13 +205,11 @@ export class MapComponent implements OnInit {
         this.openDialog(element.id)
         return;
       }
-      
     }
   }
 
   private generatebackground() {
     let size = 260 * this.campos.z / 20;
-
 
     let pattern = this.ctx.createPattern(this.images["ground"], "repeat");
 
@@ -188,6 +225,14 @@ export class MapComponent implements OnInit {
 
   }
 
+  private ToCanvasPos(x : number, y: number) : {x : number, y: number}
+  {
+    let canvasx = this.centercanvas.x + (x + this.campos.x) * this.campos.z;
+    let canvasy = this.centercanvas.y + (y + this.campos.y) * this.campos.z;
+
+    return {x: canvasx, y: canvasy}
+  }
+
   private openDialog(id :number)
   {
     let rect = this.canvas.nativeElement.getBoundingClientRect();
@@ -195,13 +240,10 @@ export class MapComponent implements OnInit {
     let x = rect.left + window.scrollX + this.lastmousepos.x
     let y = rect.top + window.screenY + this.lastmousepos.y
     
-
     const dialogRef = this.dialog.open(VillageModalComponent, {data: {id}, position: {top: y + 'px', left:  x + 'px'}, panelClass: 'dialog-no-padding'});
 
     dialogRef.afterClosed().subscribe(result => {
       console.log(`Dialog result: ${result}`);
     });
   }
-
-
 }

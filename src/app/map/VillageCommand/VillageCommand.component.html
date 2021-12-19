@@ -1,18 +1,24 @@
-<div>
-  <div class="title">{{this.villageData.name}} {{this.data.attacktype}} {{this.villageService.GetVillageData(this.data.id).name}}</div>
+<div *ngIf="this.villageData && this.targetVil">
+  <div class="title">{{this.villageData.name}} {{this.data.attacktype}} {{this.targetVil.name}}</div>
 
   <div *ngFor="let unit of this.unitdata; index as i;" >
-    <label class="unitname">{{unit.name}}</label>
+    
+    <label *ngIf="this.villageData.unitCount" class="unitname">{{unit.name}}</label>
     <mat-slider 
     value="selection[i]"
-    [max]="this.villageData.units[unit.id - 1]"
+    [(ngModel)]="selection[i]"
+    [max]="getunitamount(unit.id)"
     thumbLabel="true"
-    [disabled]="this.villageData.units[unit.id - 1] == 0"
+    [disabled]="getunitamount(unit.id) == 0"
     aria-label="unit(s)">
 
     </mat-slider>
-    <label>{{this.villageData.units[unit.id - 1]}}</label>
+    <label>{{getunitamount(unit.id)}}</label>
   </div>
+
+  <button mat-flat-button color="accent" aria-label="Village" (click)="OnAttack()">
+    <mat-icon> call_made</mat-icon> attack
+  </button>
 
   
 </div>

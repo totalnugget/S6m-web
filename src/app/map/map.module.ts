@@ -7,17 +7,20 @@ import { VillageViewComponent } from './VillageView/VillageView.component';
 import { VillageService } from './Village.service';
 import { VillageCommandComponent } from './VillageCommand/VillageCommand.component';
 import { HttpClientModule } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
+import { CommandService } from './Command.service';
 
 @NgModule({
   imports: [
     CommonModule,
     MaterialModule,
-    HttpClientModule
+    HttpClientModule,
+    FormsModule
   ],
   declarations: [MapComponent, VillageModalComponent, VillageViewComponent, VillageCommandComponent],
   entryComponents: [
     VillageModalComponent, VillageViewComponent, VillageCommandComponent
   ],
-  providers: [VillageService]
+  providers: [VillageService, CommandService]
 })
 export class MapModule { }

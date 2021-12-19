@@ -1,8 +1,8 @@
-<div class="button-container">
+<div *ngIf="this.CurrentVillage" class="button-container">
   <button mat-flat-button color="primary" aria-label="Village" (click)="onHome()" >
     <mat-icon>home</mat-icon> Village
   </button>
-  <button *ngIf="this.CurrentVillage.OwnerId == this.vilageService.OwnerId" mat-flat-button color="primary" aria-label="Village" (click)="onSelect()" [disabled]="this.vilageService.SelectedVillage == this.data.id">
+  <button *ngIf="this.CurrentVillage.ownerId == this.id" mat-flat-button color="primary" aria-label="Village" (click)="onSelect()" [disabled]="this.vilageService.SelectedVillage == this.data.id">
     <mat-icon>gps_not_fixed</mat-icon> Select
   </button>
   <button mat-flat-button color="warn" aria-label="Village" (click)="onCommand('attack')" [disabled]="this.CurrentVillage.id == this.vilageService.SelectedVillage">

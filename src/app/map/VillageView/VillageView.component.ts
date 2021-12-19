@@ -17,8 +17,8 @@ export class VillageViewComponent implements OnInit {
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: {id: number}, private villageService: VillageService) { }
 
-  ngOnInit() {
-    this.villageData = this.villageService.GetVillageData(this.data.id);
+  async ngOnInit() {
+    this.villageData = await this.villageService.GetVillageData(this.data.id);
     this.UnitData = this.villageService.UnitData;
     
     console.log(this.villageData);
