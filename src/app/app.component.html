@@ -7,9 +7,12 @@
   </div>
   <div class="nav_navigation">
       <!-- <a mat-button routerLink="css" routerLinkActive="active">Css</a>
-      <a mat-button routerLink="layout" routerLinkActive="active">layout</a>
-      <a mat-button routerLink="page" routerLinkActive="active">page</a> -->
-      <!-- <button *ngIf="this.auth.getAuthorizationToken() != null" mat-button (click)="Logout()">Logout</button> -->
+      <a mat-button routerLink="layout" routerLinkActive="active">layout</a>-->
+      <a mat-button routerLink="map" routerLinkActive="active">game</a> 
+      
+      <button mat-button (click)="Login()">Login</button>
+      <button mat-button (click)="Logout()">Logout</button>
+      <button>{{username | async}}</button>
   </div>
   <div class="options">
 

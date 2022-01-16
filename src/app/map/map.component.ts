@@ -24,13 +24,15 @@ export class MapComponent implements OnInit {
   // position and zoom of the "camera" defines wat to render
   private campos = {x: 0, y: 0, z: 100};
 
-
+  // center of canvas, half of canvas width / height
   private centercanvas = {x: 300, y: 300};
 
   private images: Array<HTMLImageElement> = [];
 
+  // stored hover events / buttons on the canvas
   private interactors = [{x: 0, y: 0, w: 0, h: 0, callback: () => console.log("default"), name: "", id: 1}];
 
+  // used to calculate movement
   private lastmousepos = {x: 0, y: 0, buttons: 0}
 
   constructor(public dialog: MatDialog, private villageService: VillageService, private commandService: CommandService) { 

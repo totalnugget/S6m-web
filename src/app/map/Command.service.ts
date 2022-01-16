@@ -20,7 +20,7 @@ export class CommandService {
   {
     let userId = this.auth.getSubId();
     
-    if(this.lastRequest + 60000 < +new Date() || refresh)
+    if(this.lastRequest + 10000 < +new Date() || refresh)
     {
       let commands = await this.http.get<Command[]>(this.commandService + "/api/command?arriveBefore=" + Number.MAX_SAFE_INTEGER).toPromise();
       this.lastRequest = +new Date();

@@ -9,10 +9,13 @@ import { environment } from 'src/environments/environment';
 export class JwtInterceptor implements HttpInterceptor {
     constructor(private authService: AuthService) { }
 
+    private apiUrl = "http://"
+
+
     intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
         // add auth header with jwt if user is logged in and request is to api url
         const token = this.authService.getAuthorizationToken();
-        const isApiUrl = request.url.startsWith("http://localhost");
+        const isApiUrl = request.url.startsWith(this.apiUrl);
         if (token && isApiUrl) {
             request = request.clone({
                 setHeaders: {

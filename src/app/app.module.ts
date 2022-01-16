@@ -1,5 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { APP_INITIALIZER, NgModule } from '@angular/core';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -9,6 +9,8 @@ import { SharedModule } from './shared/shared.module';
 import { MapModule } from './map/map.module';
 import { JwtInterceptor } from './auth/jwt.interceptor';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { initializer } from '../app/auth/keycloak-init';
+import { KeycloakAngularModule, KeycloakService } from 'keycloak-angular';
 
 @NgModule({
   declarations: [
@@ -20,10 +22,21 @@ import { HTTP_INTERCEPTORS } from '@angular/common/http';
     AppRoutingModule,
     BrowserAnimationsModule,
 
+    KeycloakAngularModule,
+
     SharedModule,
     MapModule,
   ],
-  providers: [{ provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },],
+  providers: [
+    { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializer,
+      multi: true,
+      deps: [KeycloakService],
+    }
+  
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

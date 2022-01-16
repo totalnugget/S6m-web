@@ -21,7 +21,8 @@ export class VillageService {
   public UnitData: UnitDTO[] = [
     new UnitDTO({id: 1, name: 'axe'}),
     new UnitDTO({id: 2, name: 'sword'}),
-    new UnitDTO({id: 3, name: 'bow'}),
+    new UnitDTO({id: 3, name: 'spear'}),
+    new UnitDTO({id: 4, name: 'cavalry'}),
   ];
 
   constructor(private http: HttpClient) { }
@@ -32,7 +33,7 @@ export class VillageService {
   {
     
     
-    if(this.lastRequest + 60000 < + new Date())
+    if(this.lastRequest + 10000 < + new Date())
     {
       this.lastRequest = + new Date();
       this.VillageCache = await this.http.get<Array<villageDTO>>(this.villageService + "/api/Village").toPromise();
